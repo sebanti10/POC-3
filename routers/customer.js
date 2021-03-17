@@ -7,9 +7,9 @@ const { Customer } = require("../models/customer");
 const router = new express.Router();
 
 const checkAge = dob => {
-  const year = dob.split("-")[2];
+  const year = parseInt(dob.split("-")[2]);
 
-  if (year < 2003)
+  if (year <= 2003)
     return true;
   else
     return false; 
@@ -24,7 +24,7 @@ const checkNullString = (str) => {
 };
 
 router.post("/register", async (req, res) => {
-  if (!req.body) {
+  if ((Object.keys(req.body).length === 0 && req.body.constructor === Object)) {
     res.status(400).send({ error: "body is missing in the request" });
     return;
   }
@@ -106,7 +106,7 @@ router.post("/register", async (req, res) => {
 });
 
 router.put("/update", async (req, res) => {
-  if (!req.body) {
+  if ((Object.keys(req.body).length === 0 && req.body.constructor === Object)) {
     res.status(400).send({ error: "body is missing in the request" });
     return;
   }
@@ -128,32 +128,73 @@ router.put("/update", async (req, res) => {
   }
 
   try {
-    await Customer.findOneAndUpdate({ phone, password }, req.body, {new: true}, (err, customer) => {
-      if(req.body.dob && !checkAge(req.body.dob)) {
+    const customer = await Customer.findOne({phone});
+
+    if(!customer) {
+      res.status(404).send({
+        error: "No phone number found"
+      });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(password, customer.password);
+
+    if(!isMatch) {
+      res.status(404).send({
+          error: "Incorrect password"
+        });
+      return;
+    }
+
+    if(req.body.dob) {
+      if (!checkAge(req.body.dob)) {
         res.status(400).send({
           warning: "Customer has to be 18 years or older"
         });
         return;
       }
+      customer.dob = req.body.dob;
+    }
 
-      if(err || customer===null) {
+    if(req.body.email) {
+      if(!validator.isEmail(req.body.email)) {
         res.status(400).send({
-          error: "Update failed"
+          warning: "Invalid Email Address."
         });
-      } else {
-        res.status(200).send({
-          message: "Successfully updated!",
-          customer
+        return;
+      }
+      
+      const newCustomer = await Customer.findOne({email: req.body.email});
+
+      if(newCustomer) {
+        return res.status(400).send({
+          warning: "Email Address already exists."
         });
       }
+      customer.email = req.body.email;
+    }
+
+    if(req.body.fname && !checkNullString(req.body.fname))
+      customer.fname = req.body.fname;
+
+    if(req.body.lname && !checkNullString(req.body.lname))
+      customer.lname = req.body.lname;
+
+    await customer.save();
+
+    res.status(200).send({
+      message: "Successfully updated!",
+      customer
     });
+    return;
+
   } catch(err) {
-    return res.status(500).send({ error: err });
+      return res.status(500).send({ error: err });
   }
 });
 
 router.delete("/delete", async (req, res) => {
-  if (!req.body) {
+  if ((Object.keys(req.body).length === 0 && req.body.constructor === Object)) {
     res.status(400).send({ error: "body is missing in the request" });
     return;
   }
@@ -175,19 +216,31 @@ router.delete("/delete", async (req, res) => {
   }
 
   try {
-    await Customer.findOneAndRemove({ phone, password }, (err, customer) => {
+    const customer = await Customer.findOne({phone});
 
-      if(err || customer === null) {
-        res.status(400).send({
-          error: "Customer not found"
+    if(!customer) {
+      res.status(404).send({
+        error: "No phone number found"
+      });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(password, customer.password);
+
+    if(!isMatch) {
+      res.status(404).send({
+          error: "Incorrect password"
         });
-      } else {
-        res.status(200).send({
-          message: "Successfully deleted!",
-          customer
-        });
-      }
+      return;
+    }
+
+    await customer.delete();
+
+    res.status(200).send({
+      message: "Successfully deleted!",
+      customer
     });
+    return;
   } catch(err) {
     return res.status(500).send({ error: err });
   }
