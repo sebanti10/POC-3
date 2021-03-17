@@ -7,13 +7,20 @@ const { Customer } = require("../models/customer");
 const router = new express.Router();
 const salt = bcrypt.genSaltSync(10);
 
-const checkAge = dob => {
-  const year = parseInt(dob.split("-")[2]);
+const checkAge = (dob) => {
+  const dateArr = dob.split("-");
+  const DOB = new Date(
+    parseInt(dateArr[2]),
+    parseInt(dateArr[1]),
+    parseInt(dateArr[0])
+  );
+  const diff_ms = Date.now() - DOB.getTime();
+  const age_dt = new Date(diff_ms);
 
-  if (year <= 2003)
-    return true;
-  else
-    return false; 
+  const age = Math.abs(age_dt.getUTCFullYear() - 1970);
+
+  if (age >= 18) return true;
+  else return false;
 };
 
 const checkNullString = (str) => {
@@ -62,9 +69,9 @@ router.post("/register", async (req, res) => {
     return;
   }
 
-  if(!checkAge(dob)) {
+  if (!checkAge(dob)) {
     res.status(400).send({
-      warning: "Customer has to be 18 years or older"
+      warning: "Customer has to be 18 years or older",
     });
     return;
   }
@@ -156,7 +163,7 @@ router.post("/login", async (req, res) => {
 });
 
 router.put("/update", async (req, res) => {
-  if ((Object.keys(req.body).length === 0 && req.body.constructor === Object)) {
+  if (Object.keys(req.body).length === 0 && req.body.constructor === Object) {
     res.status(400).send({ error: "body is missing in the request" });
     return;
   }
@@ -178,73 +185,72 @@ router.put("/update", async (req, res) => {
   }
 
   try {
-    const customer = await Customer.findOne({phone});
+    const customer = await Customer.findOne({ phone });
 
-    if(!customer) {
+    if (!customer) {
       res.status(404).send({
-        error: "No phone number found"
+        error: "No phone number found",
       });
       return;
     }
 
     const isMatch = await bcrypt.compare(password, customer.password);
 
-    if(!isMatch) {
+    if (!isMatch) {
       res.status(404).send({
-          error: "Incorrect password"
-        });
+        error: "Incorrect password",
+      });
       return;
     }
 
-    if(req.body.dob) {
+    if (req.body.dob) {
       if (!checkAge(req.body.dob)) {
         res.status(400).send({
-          warning: "Customer has to be 18 years or older"
+          warning: "Customer has to be 18 years or older",
         });
         return;
       }
       customer.dob = req.body.dob;
     }
 
-    if(req.body.email) {
-      if(!validator.isEmail(req.body.email)) {
+    if (req.body.email) {
+      if (!validator.isEmail(req.body.email)) {
         res.status(400).send({
-          warning: "Invalid Email Address."
+          warning: "Invalid Email Address.",
         });
         return;
       }
-      
-      const newCustomer = await Customer.findOne({email: req.body.email});
 
-      if(newCustomer) {
+      const newCustomer = await Customer.findOne({ email: req.body.email });
+
+      if (newCustomer) {
         return res.status(400).send({
-          warning: "Email Address already exists."
+          warning: "Email Address already exists.",
         });
       }
       customer.email = req.body.email;
     }
 
-    if(req.body.fname && !checkNullString(req.body.fname))
+    if (req.body.fname && !checkNullString(req.body.fname))
       customer.fname = req.body.fname;
 
-    if(req.body.lname && !checkNullString(req.body.lname))
+    if (req.body.lname && !checkNullString(req.body.lname))
       customer.lname = req.body.lname;
 
     await customer.save();
 
     res.status(200).send({
       message: "Successfully updated!",
-      customer
+      customer,
     });
     return;
-
-  } catch(err) {
-      return res.status(500).send({ error: err });
+  } catch (err) {
+    return res.status(500).send({ error: err });
   }
 });
 
 router.delete("/delete", async (req, res) => {
-  if ((Object.keys(req.body).length === 0 && req.body.constructor === Object)) {
+  if (Object.keys(req.body).length === 0 && req.body.constructor === Object) {
     res.status(400).send({ error: "body is missing in the request" });
     return;
   }
@@ -266,21 +272,21 @@ router.delete("/delete", async (req, res) => {
   }
 
   try {
-    const customer = await Customer.findOne({phone});
+    const customer = await Customer.findOne({ phone });
 
-    if(!customer) {
+    if (!customer) {
       res.status(404).send({
-        error: "No phone number found"
+        error: "No phone number found",
       });
       return;
     }
 
     const isMatch = await bcrypt.compare(password, customer.password);
 
-    if(!isMatch) {
+    if (!isMatch) {
       res.status(404).send({
-          error: "Incorrect password"
-        });
+        error: "Incorrect password",
+      });
       return;
     }
 
@@ -288,10 +294,10 @@ router.delete("/delete", async (req, res) => {
 
     res.status(200).send({
       message: "Successfully deleted!",
-      customer
+      customer,
     });
     return;
-  } catch(err) {
+  } catch (err) {
     return res.status(500).send({ error: err });
   }
 });
