@@ -68,7 +68,7 @@ router.post("/register", async (req, res) => {
       throw "phone is already is registered. Please login!";
     }
 
-    password = await bcrypt.hash(password, 8);
+    // password = await bcrypt.hash(password, 8);
     const customer = new Customer({
       fname,
       lname,
@@ -80,7 +80,7 @@ router.post("/register", async (req, res) => {
     await customer.save();
     res
       .status(201)
-      .send({ message: "Customer registered successfully", customer });
+      .send({ message: "Registration successful!", customer });
   } catch (err) {
     return res.status(500).send({ error: err });
   }

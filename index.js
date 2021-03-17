@@ -1,9 +1,12 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
+// port number
+const PORT = process.env.PORT || 9000;
+
 mongoose.Promise = global.Promise;
 mongoose.connect(
-  "mongodb://localhost:27017/Qmin",
+  "mongodb+srv://admin-user:Test123@cluster0.hu1gt.mongodb.net/customerDB?retryWrites=true&w=majority",
   {
     useNewUrlParser: true,
     useCreateIndex: true,
@@ -22,6 +25,7 @@ const app = express();
 app.use(express.json());
 app.use(customerRouter);
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+// listening on port
+app.listen(9000, () => {
+  console.log(`Server is running on port: ${PORT}`);
 });
