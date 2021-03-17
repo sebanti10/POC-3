@@ -197,7 +197,7 @@ router.put("/update", async (req, res) => {
     const isMatch = await bcrypt.compare(password, customer.password);
 
     if (!isMatch) {
-      res.status(404).send({
+      res.status(401).send({
         error: "Incorrect password",
       });
       return;
