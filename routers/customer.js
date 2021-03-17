@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const { Customer } = require("../models/customer");
 
 const router = new express.Router();
+const salt = bcrypt.genSaltSync(10);
 
 const checkNullString = (str) => {
   if (typeof str === "string" && !str.replace(/\s/g, "").length) {
@@ -32,13 +33,19 @@ router.post("/register", async (req, res) => {
       .send({ error: "lname is missing or empty in the request body" });
     return;
   }
-  if (!email || checkNullString(email) || !validator.isEmail(email)) {
+  if (!email || checkNullString(email)) {
     res.status(400).send({
-      error:
-        "email is missing or empty or not in the correct format in the request body",
+      error: "email is missing or empty in the request body",
     });
     return;
   }
+  if (!validator.isEmail(email)) {
+    res.status(400).send({
+      error: "email format is incorrect",
+    });
+    return;
+  }
+
   if (!dob || checkNullString(dob)) {
     res.status(400).send({
       error: "dob is missing or empty in the request body",
@@ -59,30 +66,75 @@ router.post("/register", async (req, res) => {
   }
 
   try {
-    let customers = await Customer.find({ email });
-    if (customers.length !== 0) {
-      throw "email is already is registered. Please login!";
+    let customer = await Customer.findOne({ email });
+    if (customer) {
+      res.status(400).send({
+        error: "email is already is registered. Please login!",
+      });
+      return;
     }
-    customers = await Customer.find({ phone });
-    if (customers.length !== 0) {
-      throw "phone is already is registered. Please login!";
+    customer = await Customer.findOne({ phone });
+    if (customer) {
+      res.status(400).send({
+        error: "phone is already is registered. Please login!",
+      });
+      return;
     }
 
-    // password = await bcrypt.hash(password, 8);
-    const customer = new Customer({
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const newCustomer = new Customer({
       fname,
       lname,
       email,
       dob,
-      password,
+      password: hashedPassword,
       phone,
     });
-    await customer.save();
-    res
-      .status(201)
-      .send({ message: "Registration successful!", customer });
+    await newCustomer.save();
+    res.status(201).send({ message: "Registration successful!", newCustomer });
   } catch (err) {
-    return res.status(500).send({ error: err });
+    return res.status(500).send({ error: "Internal server error" });
+  }
+});
+
+router.post("/login", async (req, res) => {
+  if (!req.body) {
+    res.status(400).send({ error: "body is missing in the request" });
+    return;
+  }
+  const { phone, password } = req.body;
+  if (!password || checkNullString(password)) {
+    res.status(400).send({
+      error: "password is missing or empty in the request body",
+    });
+    return;
+  }
+  if (!phone || checkNullString(phone)) {
+    res.status(400).send({
+      error: "phone is missing or empty in the request body",
+    });
+    return;
+  }
+
+  try {
+    let customer = await Customer.findOne({ phone });
+    if (!customer) {
+      res.status(404).send({
+        error: "Phone No. is not registered. Please register!",
+      });
+      return;
+    }
+    const isMatch = await bcrypt.compare(password, customer.password);
+    if (!isMatch) {
+      res.status(401).send({
+        error: "Incorrect Password!",
+      });
+      return;
+    }
+
+    res.status(200).send({ message: "Login successful!", customer });
+  } catch (err) {
+    return res.status(500).send({ error: "Internal server error" });
   }
 });
 
