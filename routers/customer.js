@@ -16,8 +16,8 @@ const checkNullString = (str) => {
 };
 
 router.post("/register", async (req, res) => {
-  if (!req.body) {
-    res.status(400).send({ error: "body is missing in the request" });
+  if (Object.keys(req.body).length === 0 && req.body.constructor === Object) {
+    res.status(400).send({ error: "request body is empty" });
     return;
   }
   const { fname, lname, email, password, dob, phone } = req.body;
@@ -98,8 +98,8 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  if (!req.body) {
-    res.status(400).send({ error: "body is missing in the request" });
+  if (Object.keys(req.body).length === 0 && req.body.constructor === Object) {
+    res.status(400).send({ error: "request body is empty" });
     return;
   }
   const { phone, password } = req.body;
