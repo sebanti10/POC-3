@@ -184,6 +184,20 @@ router.put("/update", async (req, res) => {
     return;
   }
 
+  const updates = Object.keys(req.body).filter((update) => {
+    return update !== "phone" && update !== "password";
+  });
+
+  const allowedUpdates = ["email", "dob", "fname", "lname"];
+  const isValidOption = updates.every((update) => {
+    return allowedUpdates.includes(update);
+  });
+  if (!isValidOption) {
+    return res
+      .status(400)
+      .send({ error: "Invalid update parameters in request body" });
+  }
+
   try {
     const customer = await Customer.findOne({ phone });
 
