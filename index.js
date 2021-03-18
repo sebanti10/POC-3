@@ -19,7 +19,7 @@ mongoose.connect(
   }
 );
 
-const customerRouter = require("./routers/customer");
+const customerRouter = require("./routers/customerRoutes");
 
 const app = express();
 app.use(express.json());

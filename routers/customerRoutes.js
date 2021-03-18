@@ -2,25 +2,20 @@ const express = require("express");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 
-const { Customer } = require("../models/customer");
+const { Customer } = require("../models/customerModel");
 
 const router = new express.Router();
 const salt = bcrypt.genSaltSync(10);
 
 const checkAge = (dob) => {
-  const dateArr = dob.split("-");
-  const DOB = new Date(
-    parseInt(dateArr[2]),
-    parseInt(dateArr[1]),
-    parseInt(dateArr[0])
-  );
-  const diff_ms = Date.now() - DOB.getTime();
-  const age_dt = new Date(diff_ms);
+  const customerYear = parseInt(dob.split("-")[2]);
+  const currentYear = new Date().getFullYear();
 
-  const age = Math.abs(age_dt.getUTCFullYear() - 1970);
+  const age = currentYear - customerYear;
 
-  if (age >= 18) return true;
-  else return false;
+  if (age >= 18)
+    return true;
+  return false;
 };
 
 const checkNullString = (str) => {
@@ -192,6 +187,7 @@ router.put("/update", async (req, res) => {
   const isValidOption = updates.every((update) => {
     return allowedUpdates.includes(update);
   });
+
   if (!isValidOption) {
     return res
       .status(400)
@@ -235,9 +231,9 @@ router.put("/update", async (req, res) => {
         return;
       }
 
-      const newCustomer = await Customer.findOne({ email: req.body.email });
+      const existingEmail = await Customer.findOne({ email: req.body.email });
 
-      if (newCustomer) {
+      if (existingEmail) {
         return res.status(400).send({
           warning: "Email Address already exists.",
         });
