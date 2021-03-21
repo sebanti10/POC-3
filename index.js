@@ -1,12 +1,13 @@
 const express = require("express");
 const mongoose = require("mongoose");
+require("dotenv").config();
 
 // port number
 const PORT = process.env.PORT || 9000;
 
 mongoose.Promise = global.Promise;
 mongoose.connect(
-  "mongodb+srv://admin-user:Test123@cluster0.hu1gt.mongodb.net/customerDB?retryWrites=true&w=majority",
+  process.env.DATABASE_URI,
   {
     useNewUrlParser: true,
     useCreateIndex: true,
