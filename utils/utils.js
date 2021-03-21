@@ -24,7 +24,7 @@ exports.checkAge = (dob) => {
       return false;
     }
     if (today.getMonth() + 1 === parseInt(dateArr[1])) {
-      if (today.getDate() <= parseInt(dateArr[0])) {
+      if (today.getDate() < parseInt(dateArr[0])) {
         return false;
       }
     }
