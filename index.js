@@ -19,11 +19,20 @@ mongoose.connect(
   }
 );
 
-const customerRouter = require("./routers/customer");
+const registerCustomer = require("./RegisterCustomer/index");
+const loginCustomer = require("./LoginCustomer/index");
+const updateCustomerWithPhone = require("./UpdateCustomerWithPhone/index");
+const updateCustomerWithEmail = require("./UpdateCustomerWithEmail/index");
+const deleteCustomer = require("./DeleteCustomer/index");
 
 const app = express();
 app.use(express.json());
-app.use(customerRouter);
+
+app.use(registerCustomer);
+app.use(loginCustomer);
+app.use(updateCustomerWithPhone);
+app.use(updateCustomerWithEmail);
+app.use(deleteCustomer);
 
 // listening on port
 app.listen(9000, () => {
