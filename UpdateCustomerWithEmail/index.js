@@ -1,6 +1,4 @@
 const express = require("express");
-const validator = require("validator");
-const bcrypt = require("bcryptjs");
 const {
   checkNullString,
   checkAge,
@@ -10,7 +8,6 @@ const {
 const CustomerDao = require("../dao/CustomerDao");
 
 const router = new express.Router();
-const salt = bcrypt.genSaltSync(10);
 
 router.put("/updateWithEmail", async (req, res) => {
   const customerDao = new CustomerDao("customers");
@@ -25,13 +22,6 @@ router.put("/updateWithEmail", async (req, res) => {
   if (!email || checkNullString(email)) {
     res.status(400).send({
       error: "email is missing or empty in the request body",
-    });
-    return;
-  }
-
-  if (!validator.isEmail(email)) {
-    res.status(400).send({
-      warning: "Invalid Email Address.",
     });
     return;
   }
@@ -67,11 +57,10 @@ router.put("/updateWithEmail", async (req, res) => {
       return;
     }
 
-    const isMatch = await bcrypt.compare(password, customer.password);
-
-    if (!isMatch) {
+    if(!customer.validPassword(password)) {
+      console.log('error');
       res.status(401).send({
-        error: "Incorrect password",
+        error: "Incorrect Password!",
       });
       return;
     }

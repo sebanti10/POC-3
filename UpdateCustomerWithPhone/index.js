@@ -1,11 +1,8 @@
 const express = require("express");
-const validator = require("validator");
-const bcrypt = require("bcryptjs");
-const { checkNullString, checkAge, checkDOBFormat } = require("../utils/utils");
+const { checkNullString, checkAge, checkDOBFormat, validateEmail } = require("../utils/utils");
 const CustomerDao = require("../dao/CustomerDao");
 
 const router = new express.Router();
-const salt = bcrypt.genSaltSync(10);
 
 router.put("/updateWithPhone", async (req, res) => {
   const customerDao = new CustomerDao("customers");
@@ -55,11 +52,10 @@ router.put("/updateWithPhone", async (req, res) => {
       return;
     }
 
-    const isMatch = await bcrypt.compare(password, customer.password);
-
-    if (!isMatch) {
+    if(!customer.validPassword(password)) {
+      console.log('error');
       res.status(401).send({
-        error: "Incorrect password",
+        error: "Incorrect Password!",
       });
       return;
     }
@@ -82,7 +78,7 @@ router.put("/updateWithPhone", async (req, res) => {
     }
 
     if (req.body.email) {
-      if (!validator.isEmail(req.body.email)) {
+      if (!validateEmail(req.body.email)) {
         res.status(400).send({
           warning: "Invalid Email Address.",
         });
