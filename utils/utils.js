@@ -46,3 +46,10 @@ exports.checkPhoneNumber = (phone) => {
   }
   return true;
 };
+
+exports.checkDOBFormat = (dob) => {
+  if (!dob.match(/^([0-9]{2})-([0-9]{2})-([0-9]{4})$/)) {
+    return false;
+  }
+  return true;
+};
