@@ -30,9 +30,12 @@ class CustomerDao {
       lname,
       email,
       dob,
-      password,
       phone,
     });
+    const {salt, hashedPassword} = customer.getPassword(password);
+    customer.salt = salt;
+    customer.password = hashedPassword;
+
     return customer;
   }
   async deleteCustomer(customer) {

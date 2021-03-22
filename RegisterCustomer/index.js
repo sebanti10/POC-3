@@ -1,16 +1,14 @@
 const express = require("express");
-const validator = require("validator");
-const bcrypt = require("bcryptjs");
 const {
   checkNullString,
   checkAge,
   checkPhoneNumber,
   checkDOBFormat,
+  validateEmail
 } = require("../utils/utils");
 const CustomerDao = require("../dao/CustomerDao");
 
 const router = new express.Router();
-const salt = bcrypt.genSaltSync(10);
 
 router.post("/register", async (req, res) => {
   const customerDao = new CustomerDao("customers");
@@ -38,7 +36,7 @@ router.post("/register", async (req, res) => {
     });
     return;
   }
-  if (!validator.isEmail(email)) {
+  if (!validateEmail(email)) {
     res.status(400).send({
       error: "email format is incorrect",
     });
@@ -71,6 +69,7 @@ router.post("/register", async (req, res) => {
     });
     return;
   }
+
   if (!phone || checkNullString(phone)) {
     res.status(400).send({
       error: "phone is missing or empty in the request body",
@@ -108,13 +107,12 @@ router.post("/register", async (req, res) => {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(password, salt);
     const newCustomer = await customerDao.createNewCustomer(
       fname,
       lname,
       email,
       dob,
-      hashedPassword,
+      password,
       phone
     );
     await customerDao.saveCustomer(newCustomer);
