@@ -14,7 +14,7 @@ const salt = bcrypt.genSaltSync(10);
 
 router.put("/updateWithEmail", async (req, res) => {
   const customerDao = new CustomerDao("customers");
-
+  //Object.keys(req.body).length === 0 && req.body.constructor === Object
   if (Object.keys(req.body).length === 0 && req.body.constructor === Object) {
     res.status(400).send({ error: "body is missing in the request" });
     return;
