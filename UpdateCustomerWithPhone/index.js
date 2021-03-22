@@ -1,7 +1,7 @@
 const express = require("express");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
-const { checkNullString, checkAge } = require("../utils/utils");
+const { checkNullString, checkAge, checkDOBFormat } = require("../utils/utils");
 const CustomerDao = require("../dao/CustomerDao");
 
 const router = new express.Router();
@@ -65,6 +65,13 @@ router.put("/updateWithPhone", async (req, res) => {
     }
 
     if (req.body.dob) {
+      if (!checkDOBFormat(req.body.dob)) {
+        res.status(400).send({
+          error: "dob is not in the correct format",
+        });
+        return;
+      }
+
       if (!checkAge(req.body.dob)) {
         res.status(400).send({
           warning: "Customer has to be 18 years or older",

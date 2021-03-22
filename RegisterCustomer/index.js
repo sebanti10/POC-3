@@ -5,6 +5,7 @@ const {
   checkNullString,
   checkAge,
   checkPhoneNumber,
+  checkDOBFormat,
 } = require("../utils/utils");
 const CustomerDao = require("../dao/CustomerDao");
 
@@ -50,6 +51,12 @@ router.post("/register", async (req, res) => {
     });
     return;
   }
+  if (!checkDOBFormat(dob)) {
+    res.status(400).send({
+      error: "dob is not in the correct format",
+    });
+    return;
+  }
 
   if (!checkAge(dob)) {
     res.status(400).send({
@@ -74,6 +81,12 @@ router.post("/register", async (req, res) => {
   if (!checkPhoneNumber(phone)) {
     res.status(400).send({
       error: "Phone number has to be 10 digits!",
+    });
+    return;
+  }
+  if (!phone.match(/^([0-9]{10})$/)) {
+    res.status(400).send({
+      error: "Phone number is not in the correct format",
     });
     return;
   }
